@@ -1,174 +1,652 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Workout Planner</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 700px;
-            margin: auto;
-            padding: 20px;
-        }
-        .card {
-            padding: 20px;
-            border-radius: 12px;
-            background: #f0f0f0;
-            margin-bottom: 20px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        select, input {
-            padding: 10px;
-            width: 100%;
-            margin-top: 5px;
-            margin-bottom: 15px;
-        }
-        h2 { margin-top: 40px; }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Aesthetic Workout Planner</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f4f7fb; --card:#ffffff; --muted:#6b7280; --accent:#0066ff; --glass: rgba(255,255,255,0.6);
+    --success: #10b981;
+  }
+  [data-theme="dark"]{
+    --bg:#0b1220; --card:#071021; --muted:#9aa4b2; --accent:#4ea3ff; --glass: rgba(255,255,255,0.03);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:Inter,system-ui,Arial,sans-serif; background:linear-gradient(180deg,var(--bg),#e9eef8); color:#0b1220;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; padding:28px;
+  }
+
+  .wrap{max-width:1100px;margin:0 auto;}
+
+  header{
+    display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px;
+  }
+  h1{font-size:1.6rem;margin:0}
+  .sub{color:var(--muted); font-size:0.95rem}
+
+  .top-actions{display:flex; gap:12px; align-items:center;}
+  .btn{
+    background:var(--accent); color:white; border:none; padding:10px 14px; border-radius:10px; font-weight:600; cursor:pointer;
+    box-shadow:0 6px 20px rgba(3,102,255,0.12); transition:transform .18s ease, box-shadow .18s;
+  }
+  .btn:hover{transform:translateY(-3px)}
+  .ghost{background:transparent; border:1px solid rgba(0,0,0,0.06); color:var(--muted); padding:8px 12px; border-radius:10px}
+
+  .grid{
+    display:grid; grid-template-columns: 380px 1fr; gap:20px;
+  }
+
+  /* left panel */
+  .card{
+    background:var(--card); border-radius:14px; padding:18px; box-shadow: 0 8px 30px rgba(11,18,32,0.06);
+    backdrop-filter: blur(6px);
+  }
+  label{display:block; font-weight:600; margin-top:12px; color:var(--muted); font-size:0.85rem;}
+  input, select{width:100%; padding:10px 12px; margin-top:8px; border-radius:10px; border:1px solid rgba(15,23,42,0.06); font-size:0.95rem; background:transparent; color:inherit}
+  .small{font-size:0.9rem;color:var(--muted); margin-top:8px}
+
+  /* right panel */
+  .plan-area{display:flex; flex-direction:column; gap:16px}
+  .week{display:grid; grid-template-columns:repeat(2,1fr); gap:12px}
+  .day{
+    background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+    border-radius:12px; padding:14px; border-left:4px solid var(--accent); transition:transform .18s ease;
+  }
+  .day:hover{transform:translateY(-6px)}
+  .day h3{margin:0; font-size:1rem}
+  .exercise{font-size:0.92rem; color:var(--muted); margin-left:8px; margin-top:8px}
+
+  .muted{color:var(--muted); font-size:0.9rem}
+
+  /* progress bar & streak */
+  .progress-wrap{display:flex; gap:16px; align-items:center; margin-top:4px}
+  .progress{
+    width:100%; height:14px; background:rgba(0,0,0,0.06); border-radius:999px; overflow:hidden;
+  }
+  .progress > i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),#3bd1ff); transition:width .6s ease}
+
+  .streak{min-width:120px; padding:8px 12px; border-radius:10px; background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); text-align:center}
+
+  /* calendar */
+  .calendar{display:grid; grid-template-columns:repeat(7,1fr); gap:8px}
+  .cal-day{background:var(--glass); padding:10px; border-radius:10px; text-align:center; font-size:0.9rem}
+  .cal-day .dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-top:8px}
+
+  /* print-friendly */
+  @media print{
+    body{background:white}
+    .btn, .top-actions{display:none}
+  }
+
+  /* small screens */
+  @media (max-width:980px){
+    .grid{grid-template-columns:1fr; }
+    .week{grid-template-columns:1fr}
+    .calendar{grid-template-columns:repeat(3,1fr)}
+  }
+
+  /* animations */
+  .fade-in{animation:fadeIn .45s ease both}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+</style>
 </head>
-<body>
+<body data-theme="light">
 
-    <h1>Workout Planner</h1>
-
-    <div class="card">
-        <h2>Your Info</h2>
-        <label>Age:</label>
-        <input id="age" type="number">
-
-        <label>Weight (lbs):</label>
-        <input id="weight" type="number">
-
-        <label>Do you play any sports?</label>
-        <select id="playsSport">
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
-        </select>
-
-        <label>If yes, what sport?</label>
-        <select id="sport">
-            <option value="none">None</option>
-            <option value="football">Football</option>
-            <option value="basketball">Basketball</option>
-            <option value="soccer">Soccer</option>
-            <option value="track">Track</option>
-        </select>
-
-        <label>Your Goal:</label>
-        <select id="goal">
-            <option value="muscle">Build Muscle</option>
-            <option value="fatloss">Lose Fat</option>
-            <option value="conditioning">Improve Conditioning</option>
-            <option value="sport">Sport Performance</option>
-        </select>
-
-        <button onclick="showPlans()">Find Workout Plans</button>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>SpaceTime Workout Planner</h1>
+      <div class="sub">Personalized workouts, diet tips, and cloud progress tracking.</div>
     </div>
 
-    <div id="planChoice" class="card" style="display:none;">
-        <h2>Select a Plan</h2>
-        <select id="planSelect"></select>
-        <button onclick="showSchedule()">Show Daily Plan</button>
+    <div class="top-actions">
+      <button class="ghost" id="themeToggle">Dark</button>
+      <button class="btn" id="printBtn">Print Plan</button>
+      <button class="ghost" id="authBtn">Sign In</button>
     </div>
+  </header>
 
-    <div id="finalPlan" class="card" style="display:none;">
-        <h2>Your Daily Workout Plan</h2>
-        <div id="scheduleOutput"></div>
-    </div>
+  <main class="grid">
+    <!-- LEFT: Inputs -->
+    <section class="card fade-in" id="controls">
+      <h2>Build your plan</h2>
+
+      <label>Age</label>
+      <input id="age" type="number" placeholder="18">
+
+      <label>Weight (lbs)</label>
+      <input id="weight" type="number" placeholder="160">
+
+      <label>Sport (optional)</label>
+      <select id="sport">
+        <option value="none">None</option>
+        <option value="football">Football</option>
+        <option value="basketball">Basketball</option>
+        <option value="soccer">Soccer</option>
+        <option value="track">Track</option>
+      </select>
+
+      <label>Goal</label>
+      <select id="goal">
+        <option value="muscle">Build Muscle</option>
+        <option value="fatloss">Lose Fat</option>
+        <option value="conditioning">Improve Conditioning</option>
+        <option value="sport">Sport Performance</option>
+      </select>
+
+      <label>Level</label>
+      <select id="level">
+        <option value="beginner">Beginner</option>
+        <option value="intermediate">Intermediate</option>
+        <option value="advanced">Advanced</option>
+      </select>
+
+      <div style="display:flex; gap:8px; margin-top:14px">
+        <button class="btn" id="generateBtn">Generate Plans</button>
+        <button class="ghost" id="randomizeBtn">Random Plan</button>
+      </div>
+
+      <div class="small muted" style="margin-top:12px">Tip: Sign in to save your progress and streak across devices.</div>
+
+      <hr style="margin:16px 0; border:none; height:1px; background:rgba(0,0,0,0.05)">
+
+      <div>
+        <strong>Progress</strong>
+        <div class="progress-wrap" style="margin-top:8px">
+          <div class="progress"><i id="progressFill" style="width:0%"></i></div>
+          <div class="streak" id="streakBox">Streak: 0🔥</div>
+        </div>
+
+        <div style="margin-top:12px; display:flex; gap:8px">
+          <button class="btn" id="markTodayBtn">Mark Today Done</button>
+          <button class="ghost" id="unmarkTodayBtn">Undo</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Plan display -->
+    <section class="plan-area">
+
+      <div class="card fade-in" id="planCard">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h2 id="planTitle">Pick options and generate</h2>
+            <div class="muted" id="planSubtitle">Specific workouts will appear here</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select id="availablePlans" style="padding:8px;border-radius:10px">
+            </select>
+            <button class="btn" id="selectPlanBtn">Load</button>
+          </div>
+        </div>
+
+        <div style="margin-top:16px" id="planBody">
+          <div class="week" id="weekGrid">
+            <!-- days populated here -->
+          </div>
+
+          <div style="margin-top:12px; display:flex; gap:8px">
+            <button class="btn" id="saveProgressBtn">Save Progress</button>
+            <button class="ghost" id="showCalendarBtn">Calendar View</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- calendar and nutrition -->
+      <div class="card fade-in" id="calendarCard" style="display:none">
+        <h3>Calendar (7-day)</h3>
+        <div class="calendar" id="calendarGrid" style="margin-top:8px"></div>
+        <div class="muted" style="margin-top:12px">Green dot = completed</div>
+      </div>
+
+      <div class="card fade-in" id="nutritionCard">
+        <h3>Nutrition Suggestions</h3>
+        <div class="muted" id="nutritionText" style="margin-top:8px">
+          Balanced macros: Protein 25–35%, Carbs 40–55%, Fat 20–30%. For muscle: +250–500 kcal/day; For fat loss: -250–500 kcal/day.
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <footer style="margin-top:20px; text-align:center; color:var(--muted)">
+    Made with ❤️ — public site. Data stored in your Firebase project.
+  </footer>
+</div>
+
+<!-- Firebase v9 modular (CDN) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-    const planDatabase = {
-        muscle: {
-            name: "Beginner Strength",
-            schedule: [
-                "Day 1: Upper Body – 35 min",
-                "Day 2: Lower Body – 40 min",
-                "Day 3: Rest",
-                "Day 4: Full Body – 45 min",
-                "Day 5: Core + Light Cardio – 20 min",
-                "Day 6: Lower Body – 35 min",
-                "Day 7: Rest"
-            ]
-        },
-        fatloss: {
-            name: "Fat Loss Burner",
-            schedule: [
-                "Day 1: HIIT – 20 min",
-                "Day 2: Walking/Jogging – 40 min",
-                "Day 3: Strength Circuit – 30 min",
-                "Day 4: Rest",
-                "Day 5: HIIT – 20 min",
-                "Day 6: Long Cardio – 45 min",
-                "Day 7: Rest"
-            ]
-        },
-        conditioning: {
-            name: "Conditioning Builder",
-            schedule: [
-                "Day 1: Run Intervals – 25 min",
-                "Day 2: Bodyweight Circuit – 30 min",
-                "Day 3: Rest",
-                "Day 4: Hill Sprints – 15 min",
-                "Day 5: Core + Mobility – 25 min",
-                "Day 6: Long Jog – 35 min",
-                "Day 7: Rest"
-            ]
-        },
-        football: {
-            name: "Football Strength & Speed",
-            schedule: [
-                "Day 1: Speed Work – 30 min",
-                "Day 2: Upper Strength – 40 min",
-                "Day 3: Lower Strength – 40 min",
-                "Day 4: Rest",
-                "Day 5: Conditioning – 25 min",
-                "Day 6: Agility Drills – 20 min",
-                "Day 7: Rest"
-            ]
-        }
-    };
+/* ============================
+   FIREBASE CONFIG - REPLACE THIS
+   ============================ */
+const firebaseConfig = {
+  // 🔁 REPLACE the fields below with the config from your Firebase console
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+/* ============================ */
 
-    function showPlans() {
-        const goal = document.getElementById("goal").value;
-        const sport = document.getElementById("sport").value;
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-        let availablePlans = [];
+/* -----------------------
+   Helper: current user identifier
+   - If user is signed in, use uid
+   - If not signed in, we create a "guest" doc keyed by browser ID stored in localStorage
+   ----------------------- */
+function getLocalGuestId(){
+  let id = localStorage.getItem('guestId');
+  if(!id){
+    id = 'guest_' + Math.random().toString(36).slice(2,10);
+    localStorage.setItem('guestId', id);
+  }
+  return id;
+}
 
-        if (goal !== "sport") {
-            availablePlans.push(planDatabase[goal]);
-        }
+function getUserKey(){
+  const u = auth.currentUser;
+  return u ? ('user_' + u.uid) : getLocalGuestId();
+}
 
-        if (sport !== "none") {
-            if (planDatabase[sport]) availablePlans.push(planDatabase[sport]);
-        }
+/* -----------------------
+   Authentication quick UI
+   - Simple email/password modal-less flow for beginners
+   - You can wire anonymous auth by calling auth.signInAnonymously()
+   ----------------------- */
+const authBtn = document.getElementById('authBtn');
+authBtn.onclick = async ()=>{
+  if(!auth.currentUser){
+    const email = prompt("Email (create account or sign in):");
+    if(!email) return;
+    const pass = prompt("Password (min 6 chars):");
+    if(!pass) return;
+    try{
+      // try sign in first
+      await auth.signInWithEmailAndPassword(email, pass);
+      alert('Signed in!');
+    }catch(e){
+      // if sign in fails, try create account
+      try{
+        await auth.createUserWithEmailAndPassword(email, pass);
+        alert('Account created and signed in!');
+      }catch(err){
+        alert('Auth error: '+err.message);
+      }
+    }
+  }else{
+    await auth.signOut();
+    alert('Signed out');
+  }
+};
 
-        const planSelect = document.getElementById("planSelect");
-        planSelect.innerHTML = "";
+/* Track auth state */
+auth.onAuthStateChanged(user=>{
+  authBtn.textContent = user ? 'Sign Out' : 'Sign In';
+});
 
-        availablePlans.forEach((plan, index) => {
-            let option = document.createElement("option");
-            option.value = index;
-            option.textContent = plan.name;
-            planSelect.appendChild(option);
+/* -----------------------
+   Workout database (detailed)
+   ----------------------- */
+const workouts = {
+  muscle: {
+    name: "Muscle Builder",
+    beginner: [
+      {title:"Push Day", exercises: ["Bench Press – 3×8", "Incline Dumbbell Press – 3×10", "Push-ups – 3×12", "Tricep Dips – 3×10"]},
+      {title:"Pull Day", exercises: ["Bent-over Row – 3×8", "Lat Pulldowns – 3×10", "Face Pulls – 3×12", "Hammer Curls – 3×12"]},
+      {title:"Legs", exercises: ["Back Squat – 3×8", "Leg Press – 3×12", "Romanian Deadlift – 3×10", "Calf Raises – 3×15"]},
+      {title:"Active Recovery", exercises: ["Stretching – 15 min", "Walking – 20 min"]},
+      {title:"Upper Hypertrophy", exercises: ["Dumbbell Bench – 3×10", "Pull-ups – 3×6", "Shoulder Press – 3×10", "Cable Fly – 3×12"]},
+      {title:"Legs + Core", exercises: ["Lunges – 3×12", "Leg Curl – 3×15", "Planks – 3×45s", "Hanging Leg Raises – 3×12"]},
+      {title:"Rest", exercises: ["Full rest"]}
+    ],
+    intermediate: [ /* slightly heavier sets */ ],
+    advanced: [ /* advanced programming placeholder */ ]
+  },
+
+  fatloss: {
+    name: "Fat Loss HIIT",
+    beginner: [
+      {title:"HIIT", exercises:["Sprints 10×20s","Burpees 3×12","Mountain Climbers 3×40s"]},
+      {title:"Cardio", exercises:["Run 30–35 min steady","Row 10 min"]},
+      {title:"Circuit", exercises:["Goblet Squat 3×12","Push-ups 3×12","Sit-ups 3×20"]},
+      {title:"Rest", exercises:["Stretch 20 min"]},
+      {title:"HIIT", exercises:["Bike Sprints 8×20s","Jump Rope 6 min"]},
+      {title:"Long Cardio", exercises:["Walk 45 min"]},
+      {title:"Rest", exercises:["Full rest"]}
+    ]
+  },
+
+  football:{ name:"Football", beginner:[
+    {title:"Speed", exercises:["40yd sprints 6 reps","Ladder 8 min"]},
+    {title:"Upper Strength", exercises:["Bench 3×6","Row 3×8","Shoulder Press 3×8"]},
+    {title:"Lower Strength", exercises:["Squat 3×6","Power Clean 3×4","Box Jumps 3×8"]},
+    {title:"Rest", exercises:["Stretch 15 min"]},
+    {title:"Conditioning", exercises:["Gassers 4 reps","Push-ups 3×20"]},
+    {title:"Agility", exercises:["Cone Drills 12 min","Shuttle Runs 5 reps"]},
+    {title:"Rest", exercises:["Full rest"]}
+  ]},
+
+  basketball:{ name:"Basketball", beginner:[
+    {title:"Shooting & Skill", exercises:["Form Shooting 15 min","Spot Shooting 100 shots","Ball Handling 10 min"]},
+    {title:"Strength", exercises:["Goblet Squat 3×12","Push-ups 3×15","Pull-ups 3×6"]},
+    {title:"Conditioning", exercises:["Suicides 6 reps","Jump Rope 8 min"]},
+    {title:"Active Recovery", exercises:["Stretch + foam roll 20 min"]},
+    {title:"Power", exercises:["Box Jumps 3×8","Medicine Ball Throws 3×10"]},
+    {title:"Skill Day", exercises:["1-on-1 or drills 25–30 min"]},
+    {title:"Rest", exercises:["Full rest"]}
+  ]},
+
+  soccer:{ name:"Soccer", beginner:[
+    {title:"Conditioning", exercises:["Tempo Run 25–30 min","Shuttle Runs 8 reps"]},
+    {title:"Strength", exercises:["Front Squat 3×8","Romanian DL 3×10","Core 10 min"]},
+    {title:"Skill", exercises:["Passing drills 20 min","Shooting drills 20 min"]},
+    {title:"Rest", exercises:["Stretch 20 min"]},
+    {title:"Sprint Work", exercises:["10×40m sprints"]},
+    {title:"Small-Sided Games", exercises:["3v3 or drills 25–30 min"]},
+    {title:"Rest", exercises:["Full rest"]}
+  ]},
+
+  track:{ name:"Track", beginner:[
+    {title:"Intervals", exercises:["400m repeats 6×400m","Jog recoveries"]},
+    {title:"Speed", exercises:["30m accelerations 8 reps","A-skips 5×20m"]},
+    {title:"Endurance", exercises:["Long steady run 40 min"]},
+    {title:"Recovery", exercises:["Light jog + stretch 20 min"]},
+    {title:"Hill Sprints", exercises:["8×30s uphill"]},
+    {title:"Technique", exercises:["Form drills 20 min"]},
+    {title:"Rest", exercises:["Full rest"]}
+  ]}
+};
+
+/* Fill gaps for intermediate/advanced simplistically if empty */
+Object.keys(workouts).forEach(key=>{
+  const w = workouts[key];
+  ['intermediate','advanced'].forEach(l=>{
+    if(!w[l]){
+      // simple scale up: duplicate beginner but mark sets higher
+      if(w.beginner){
+        w[l] = w.beginner.map(d=>{
+          return {
+            title: d.title + (l==='intermediate' ? " — Int" : " — Adv"),
+            exercises: d.exercises.map(ex=>{
+              // tiny transformation: replace 3× with 4× for intermediate, 5× for advanced
+              return ex.replace(/3×/g, l==='intermediate' ? '4×' : '5×');
+            })
+          };
         });
-
-        document.getElementById("planChoice").style.display = "block";
+      }
     }
+  });
+});
 
-    function showSchedule() {
-        const selectedIndex = document.getElementById("planSelect").value;
-        const planOptions = Object.values(planDatabase);
-        const chosenPlan = planOptions[selectedIndex];
+/* -----------------------
+   UI wiring
+   ----------------------- */
+const generateBtn = document.getElementById('generateBtn');
+const randomizeBtn = document.getElementById('randomizeBtn');
+const availablePlans = document.getElementById('availablePlans');
+const selectPlanBtn = document.getElementById('selectPlanBtn');
+const weekGrid = document.getElementById('weekGrid');
+const planTitle = document.getElementById('planTitle');
+const planSubtitle = document.getElementById('planSubtitle');
+const progressFill = document.getElementById('progressFill');
+const streakBox = document.getElementById('streakBox');
+const markTodayBtn = document.getElementById('markTodayBtn');
+const unmarkTodayBtn = document.getElementById('unmarkTodayBtn');
+const showCalendarBtn = document.getElementById('showCalendarBtn');
+const calendarCard = document.getElementById('calendarCard');
+const calendarGrid = document.getElementById('calendarGrid');
+const printBtn = document.getElementById('printBtn');
+const themeToggle = document.getElementById('themeToggle');
+const saveProgressBtn = document.getElementById('saveProgressBtn');
 
-        const output = document.getElementById("scheduleOutput");
-        output.innerHTML = chosenPlan.schedule.map(day => `<p>${day}</p>`).join("");
+let currentPlan = null;
+let selectedPlanKey = null; // e.g., "muscle:beginner"
+let progressState = { completedDays: {}, streak: 0 };
 
-        document.getElementById("finalPlan").style.display = "block";
-    }
+/* Theme */
+themeToggle.onclick = ()=>{
+  const t = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', t);
+  themeToggle.textContent = t==='dark' ? 'Light' : 'Dark';
+};
+
+/* Print */
+printBtn.onclick = ()=> window.print();
+
+/* Generate plans from options */
+generateBtn.onclick = ()=>{
+  const sport = document.getElementById('sport').value;
+  const goal = document.getElementById('goal').value;
+  const level = document.getElementById('level').value;
+
+  // Build candidate plans
+  const plans = [];
+  if(goal !== 'sport' && workouts[goal]) plans.push({key:goal+':'+level, title:workouts[goal].name + ' — ' + capitalize(level), days: workouts[goal][level]});
+  if(sport !== 'none' && workouts[sport]) plans.push({key:sport+':'+level, title:workouts[sport].name + ' — ' + capitalize(level), days: workouts[sport][level]});
+  // fallback: muscle plan
+  if(plans.length===0) plans.push({key:'muscle:'+level, title:workouts.muscle.name + ' — ' + capitalize(level), days:workouts.muscle[level]});
+
+  // populate select
+  availablePlans.innerHTML = '';
+  plans.forEach(p=>{
+    const opt = document.createElement('option'); opt.value = p.key; opt.text = p.title;
+    availablePlans.appendChild(opt);
+  });
+
+  // auto-load first
+  if(plans[0]) loadPlan(plans[0]);
+};
+
+/* Randomize quick plan */
+randomizeBtn.onclick = ()=>{
+  const keys = Object.keys(workouts);
+  const sport = keys[Math.floor(Math.random()*keys.length)];
+  document.getElementById('sport').value = sport;
+  document.getElementById('goal').value = sport;
+  document.getElementById('level').value = ['beginner','intermediate','advanced'][Math.floor(Math.random()*3)];
+  generateBtn.click();
+};
+
+/* load from select */
+selectPlanBtn.onclick = ()=>{
+  const val = availablePlans.value;
+  if(!val)return;
+  const [k,level] = val.split(':');
+  loadPlan({key:val, title:workouts[k].name + ' — ' + capitalize(level), days:workouts[k][level]});
+};
+
+/* Populate week grid */
+function loadPlan(plan){
+  currentPlan = plan;
+  selectedPlanKey = plan.key;
+  planTitle.textContent = plan.title;
+  planSubtitle.textContent = `${plan.days.length} days • Level in UI`;
+  weekGrid.innerHTML = '';
+  plan.days.forEach((d,i)=>{
+    const el = document.createElement('div');
+    el.className = 'day';
+    el.innerHTML = `<h3>Day ${i+1} — ${sanitize(d.title)}</h3>` + d.exercises.map(ex=>`<div class="exercise">• ${sanitize(ex)}</div>`).join('');
+    weekGrid.appendChild(el);
+  });
+  // reset UI calendar/hide
+  calendarCard.style.display = 'none';
+  // load progress for this plan from cloud
+  loadProgress();
+}
+
+/* sanitize helper */
+function sanitize(s){ return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+/* -----------------------
+   Progress tracking (cloud)
+   - structure in Firestore:
+     collection: "user_progress"
+     doc id: userKey (user or guest)
+     fields: plans: { "<planKey>": { completedDays: { "YYYY-MM-DD": true, ... }, streak: 3, lastCompleted: "YYYY-MM-DD" } }
+   ----------------------- */
+
+async function loadProgress(){
+  const key = getUserKey();
+  const docRef = db.collection('user_progress').doc(key);
+  const snap = await docRef.get();
+  if(!snap.exists){
+    progressState = { completedDays: {}, streak: 0 };
+    renderProgress();
+    return;
+  }
+  const data = snap.data();
+  const plans = data.plans || {};
+  const planData = plans[selectedPlanKey] || { completedDays: {}, streak: 0, lastCompleted: null };
+  progressState = { completedDays: planData.completedDays || {}, streak: planData.streak || 0, lastCompleted: planData.lastCompleted || null };
+  renderProgress();
+}
+
+async function saveProgressToCloud(){
+  const key = getUserKey();
+  const docRef = db.collection('user_progress').doc(key);
+  const snap = await docRef.get();
+  const data = snap.exists ? snap.data() : {};
+  data.plans = data.plans || {};
+  data.plans[selectedPlanKey] = {
+    completedDays: progressState.completedDays,
+    streak: progressState.streak,
+    lastCompleted: progressState.lastCompleted || null
+  };
+  await docRef.set(data);
+  alert('Progress saved to cloud!');
+}
+
+/* mark today done */
+markTodayBtn.onclick = async ()=>{
+  if(!currentPlan){ alert('Load a plan first'); return; }
+  const today = new Date().toISOString().slice(0,10);
+  if(progressState.completedDays[today]) { alert("Already marked today"); return; }
+  progressState.completedDays[today] = true;
+
+  // update streak logic: if lastCompleted was yesterday -> streak+1, else streak = 1
+  const last = progressState.lastCompleted;
+  if(last){
+    const lastDate = new Date(last);
+    const y = new Date(today); y.setDate(y.getDate() - 1);
+    const yStr = y.toISOString().slice(0,10);
+    if(last === yStr) progressState.streak = (progressState.streak || 0) + 1;
+    else progressState.streak = 1;
+  }else{
+    progressState.streak = 1;
+  }
+  progressState.lastCompleted = today;
+  renderProgress();
+  await saveProgressToCloud();
+};
+
+/* undo today */
+unmarkTodayBtn.onclick = async ()=>{
+  if(!currentPlan){ alert('Load a plan first'); return; }
+  const today = new Date().toISOString().slice(0,10);
+  if(progressState.completedDays[today]){
+    delete progressState.completedDays[today];
+    // naive streak recalculation: compute longest recent consecutive ending yesterday
+    await recalcStreakAfterUndo();
+    renderProgress();
+    await saveProgressToCloud();
+  } else alert("Nothing to undo for today");
+};
+
+/* recalc streak helper after undo */
+async function recalcStreakAfterUndo(){
+  const keys = Object.keys(progressState.completedDays).sort().reverse(); // newest first
+  if(keys.length===0){ progressState.streak = 0; progressState.lastCompleted = null; return; }
+  const today = new Date().toISOString().slice(0,10);
+  // If lastCompleted was removed, recompute streak ending at most recent date
+  const mostRecent = keys[0];
+  progressState.lastCompleted = mostRecent;
+  // count consecutive days ending at mostRecent
+  let s = 0;
+  let cursor = new Date(mostRecent);
+  while(true){
+    const cs = cursor.toISOString().slice(0,10);
+    if(progressState.completedDays[cs]){ s++; cursor.setDate(cursor.getDate() - 1); } else break;
+  }
+  progressState.streak = s;
+}
+
+/* render progress bar and calendar */
+function renderProgress(){
+  // percent = completedDays within 7-day window / 7
+  const today = new Date();
+  let count = 0;
+  const weekKeys = [];
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(today.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    weekKeys.push(key);
+    if(progressState.completedDays[key]) count++;
+  }
+  const percent = Math.round((count/7)*100);
+  progressFill.style.width = percent + '%';
+  streakBox.textContent = `Streak: ${progressState.streak} 🔥`;
+
+  // calendar dots
+  calendarGrid.innerHTML = '';
+  weekKeys.forEach(k=>{
+    const el = document.createElement('div'); el.className = 'cal-day';
+    const label = new Date(k).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+    el.innerHTML = `<div>${label}</div>`;
+    const dot = document.createElement('div'); dot.className='dot';
+    dot.style.background = progressState.completedDays[k] ? 'var(--success)' : 'transparent';
+    el.appendChild(dot);
+    calendarGrid.appendChild(el);
+  });
+}
+
+/* show calendar */
+showCalendarBtn.onclick = ()=>{
+  calendarCard.style.display = calendarCard.style.display === 'none' ? 'block' : 'none';
+  renderProgress();
+};
+
+/* Save progress button explicit */
+saveProgressBtn.onclick = async ()=> {
+  if(!selectedPlanKey){ alert('Load a plan first'); return; }
+  await saveProgressToCloud();
+};
+
+/* load on startup: allow anonymous or guest */
+(async function init(){
+  // Optionally sign in anonymously so that user has an account (uncomment to use)
+  // await auth.signInAnonymously();
+
+  // preset UI
+  document.getElementById('sport').value = 'none';
+  document.getElementById('goal').value = 'muscle';
+  document.getElementById('level').value = 'beginner';
+
+  // auto generate a default plan
+  generateBtn.click();
+
+  // render initial progress
+  renderProgress();
+})();
+
 </script>
-
 </body>
 </html>
