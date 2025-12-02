@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Workout Planner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: auto;
+            padding: 20px;
+        }
+        .card {
+            padding: 20px;
+            border-radius: 12px;
+            background: #f0f0f0;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        select, input {
+            padding: 10px;
+            width: 100%;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+        h2 { margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+    <h1>Workout Planner</h1>
+
+    <div class="card">
+        <h2>Your Info</h2>
+        <label>Age:</label>
+        <input id="age" type="number">
+
+        <label>Weight (lbs):</label>
+        <input id="weight" type="number">
+
+        <label>Do you play any sports?</label>
+        <select id="playsSport">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+        </select>
+
+        <label>If yes, what sport?</label>
+        <select id="sport">
+            <option value="none">None</option>
+            <option value="football">Football</option>
+            <option value="basketball">Basketball</option>
+            <option value="soccer">Soccer</option>
+            <option value="track">Track</option>
+        </select>
+
+        <label>Your Goal:</label>
+        <select id="goal">
+            <option value="muscle">Build Muscle</option>
+            <option value="fatloss">Lose Fat</option>
+            <option value="conditioning">Improve Conditioning</option>
+            <option value="sport">Sport Performance</option>
+        </select>
+
+        <button onclick="showPlans()">Find Workout Plans</button>
+    </div>
+
+    <div id="planChoice" class="card" style="display:none;">
+        <h2>Select a Plan</h2>
+        <select id="planSelect"></select>
+        <button onclick="showSchedule()">Show Daily Plan</button>
+    </div>
+
+    <div id="finalPlan" class="card" style="display:none;">
+        <h2>Your Daily Workout Plan</h2>
+        <div id="scheduleOutput"></div>
+    </div>
+
+<script>
+    const planDatabase = {
+        muscle: {
+            name: "Beginner Strength",
+            schedule: [
+                "Day 1: Upper Body – 35 min",
+                "Day 2: Lower Body – 40 min",
+                "Day 3: Rest",
+                "Day 4: Full Body – 45 min",
+                "Day 5: Core + Light Cardio – 20 min",
+                "Day 6: Lower Body – 35 min",
+                "Day 7: Rest"
+            ]
+        },
+        fatloss: {
+            name: "Fat Loss Burner",
+            schedule: [
+                "Day 1: HIIT – 20 min",
+                "Day 2: Walking/Jogging – 40 min",
+                "Day 3: Strength Circuit – 30 min",
+                "Day 4: Rest",
+                "Day 5: HIIT – 20 min",
+                "Day 6: Long Cardio – 45 min",
+                "Day 7: Rest"
+            ]
+        },
+        conditioning: {
+            name: "Conditioning Builder",
+            schedule: [
+                "Day 1: Run Intervals – 25 min",
+                "Day 2: Bodyweight Circuit – 30 min",
+                "Day 3: Rest",
+                "Day 4: Hill Sprints – 15 min",
+                "Day 5: Core + Mobility – 25 min",
+                "Day 6: Long Jog – 35 min",
+                "Day 7: Rest"
+            ]
+        },
+        football: {
+            name: "Football Strength & Speed",
+            schedule: [
+                "Day 1: Speed Work – 30 min",
+                "Day 2: Upper Strength – 40 min",
+                "Day 3: Lower Strength – 40 min",
+                "Day 4: Rest",
+                "Day 5: Conditioning – 25 min",
+                "Day 6: Agility Drills – 20 min",
+                "Day 7: Rest"
+            ]
+        }
+    };
+
+    function showPlans() {
+        const goal = document.getElementById("goal").value;
+        const sport = document.getElementById("sport").value;
+
+        let availablePlans = [];
+
+        if (goal !== "sport") {
+            availablePlans.push(planDatabase[goal]);
+        }
+
+        if (sport !== "none") {
+            if (planDatabase[sport]) availablePlans.push(planDatabase[sport]);
+        }
+
+        const planSelect = document.getElementById("planSelect");
+        planSelect.innerHTML = "";
+
+        availablePlans.forEach((plan, index) => {
+            let option = document.createElement("option");
+            option.value = index;
+            option.textContent = plan.name;
+            planSelect.appendChild(option);
+        });
+
+        document.getElementById("planChoice").style.display = "block";
+    }
+
+    function showSchedule() {
+        const selectedIndex = document.getElementById("planSelect").value;
+        const planOptions = Object.values(planDatabase);
+        const chosenPlan = planOptions[selectedIndex];
+
+        const output = document.getElementById("scheduleOutput");
+        output.innerHTML = chosenPlan.schedule.map(day => `<p>${day}</p>`).join("");
+
+        document.getElementById("finalPlan").style.display = "block";
+    }
+</script>
+
+</body>
+</html>
